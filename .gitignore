@@ -1,3 +1,9 @@
+# Build Files/Local Files
+*.pdb
+*.tlog
+Debug/
+Release/
+
 # Prerequisites
 *.d
 
@@ -30,3 +36,6 @@
 *.exe
 *.out
 *.app
+*.db
+*.opendb
+*.ipch
