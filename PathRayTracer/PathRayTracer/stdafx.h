@@ -14,6 +14,4 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "Headers\stb_image.h"
 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#define STBI_MSC_SECURE_CRT
-#include "Headers\stb_image_write.h"
+#include "Maths\vec3.h"
