@@ -32,13 +32,11 @@ void WriteToBaseImageFilePPM(int width, int height, const char* filename)
 	fileStream.close();
 }
 
-bool WritePNGFile(const int w,const int h, int comp, const void* data)
+bool WriteBMPFile(const int w,const int h, int comp, const void* data)
 {	
-	std::vector<vec3> colData;
-	colData.resize(w * h);
+	unsigned char* colDataRaw = new unsigned char[(w*h)*3];
 
-	int pixel = 0;
-	for (int j = h - 1; j >= h; j--)
+	for (int j = h - 1; j >= 0; j--)
 	{
 		for (int i = 0; i < w; i++)
 		{
@@ -47,13 +45,14 @@ bool WritePNGFile(const int w,const int h, int comp, const void* data)
 			int ir = int(255.99f*col[0]);
 			int ig = int(255.99f*col[1]);
 			int ib = int(255.99f*col[2]);
-			colData[pixel] = vec3(ir, ig, ib);
-			pixel++;
+
+			colDataRaw[j * i + w] = ir;
+			colDataRaw[(j * i + w) + 1] = ig;
+			colDataRaw[(j * i + w) + 2] = ib;
 		}
 	}
 
-
-	if (stbi_write_bmp("example2.bmp", w, h, 3, &colData) != 0)
+	if (stbi_write_bmp("example2.bmp", w, h, 3, &colDataRaw[0]) != 0)
 		return false;
 
 	return true;
@@ -64,7 +63,7 @@ int main()
 	int xSize = 200, ySize = 100;
 
 	//WriteToBaseImageFilePPM(xSize, ySize, "example.ppm");
-	WritePNGFile(xSize, ySize, 3, nullptr);
+	WriteBMPFile(xSize, ySize, 3, nullptr);
 
 	cout << "Press Enter key to close" << endl;
 	cin.get();
