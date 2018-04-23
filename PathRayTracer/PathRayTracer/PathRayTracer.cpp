@@ -34,8 +34,20 @@ void WriteToBaseImageFilePPM(int width, int height, const char* filename)
 
 bool WriteBMPFile(const int w,const int h, int comp, const void* data)
 {	
-	unsigned char* colDataRaw = new unsigned char[(w*h)*3];
+	if (stbi_write_bmp("example.bmp", w, h, 3, data) == 0)
+		return false;
 
+	return true;
+}
+
+
+
+int main()
+{
+	int w = 200, h = 100;
+
+	unsigned char* colDataRaw = new unsigned char[(w*h) * 3];
+	int pix = 0;
 	for (int j = h - 1; j >= 0; j--)
 	{
 		for (int i = 0; i < w; i++)
@@ -46,24 +58,15 @@ bool WriteBMPFile(const int w,const int h, int comp, const void* data)
 			int ig = int(255.99f*col[1]);
 			int ib = int(255.99f*col[2]);
 
-			colDataRaw[j * i + w] = ir;
-			colDataRaw[(j * i + w) + 1] = ig;
-			colDataRaw[(j * i + w) + 2] = ib;
+			colDataRaw[pix] = ir;
+			colDataRaw[pix + 1] = ig;
+			colDataRaw[pix + 2] = ib;
+			pix += 3;
 		}
 	}
 
-	if (stbi_write_bmp("example2.bmp", w, h, 3, &colDataRaw[0]) != 0)
-		return false;
-
-	return true;
-}
-
-int main()
-{
-	int xSize = 200, ySize = 100;
-
 	//WriteToBaseImageFilePPM(xSize, ySize, "example.ppm");
-	WriteBMPFile(xSize, ySize, 3, nullptr);
+	WriteBMPFile(w, h, 3, &colDataRaw[0]);
 
 	cout << "Press Enter key to close" << endl;
 	cin.get();
