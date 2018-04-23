@@ -40,3 +40,6 @@ Release/
 *.opendb
 *.ipch
 *.bmp
+*.vcxproj
+PathRayTracer/.vs/PathRayTracer/v14/.suo
+*.vcxproj
