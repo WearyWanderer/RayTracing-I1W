@@ -15,3 +15,4 @@
 #include "Headers\stb_image.h"
 
 #include "Maths\vec3.h"
+#include "Maths\ray.h"
