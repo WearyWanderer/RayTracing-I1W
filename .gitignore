@@ -43,3 +43,5 @@ Release/
 *.vcxproj
 PathRayTracer/.vs/PathRayTracer/v14/.suo
 *.vcxproj
+PathRayTracer/PathRayTracer/PathRayTracer.vcxproj
+*.vcxproj
