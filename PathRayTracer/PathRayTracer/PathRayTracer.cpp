@@ -40,21 +40,29 @@ bool WriteBMPFile(const int w,const int h, int comp, const void* data)
 	return true;
 }
 
-bool hit_sphere(const vec3& position, float radius, const ray& r)
+float hit_sphere(const vec3& position, float radius, const ray& r)
 {
 	vec3 oc = r.origin() - position;
 	float a = dot(r.direction(), r.direction()), b = 2.0f * dot(oc, r.direction()), c = dot(oc, oc) - radius*radius;
 
 	float discriminant = b*b - 4 * a*c;
-	return (discriminant > 0);
+	if (discriminant < 0)
+		return -1.0f;
+	else
+		return (-b - sqrt(discriminant)) / (2.0f * a);
 }
 
 vec3 color(const ray& r)
 {
-	if (hit_sphere(vec3(0.0f,0.0f,-1.0f), 0.5f, r))
-		return vec3(1.0f, 0.0f, 0.0f);
+	float t = hit_sphere(vec3(0.0f, 0.0f, -1.0f), 0.5f, r);
+	if (t > 0.0f)
+	{
+		vec3 normal = unit_vector(r.point_at_param(t) - vec3(0.0f, 0.0f, -1.0f)); //calculate normal on sphere from this pixel
+		return 0.5f * vec3(normal.x() + 1, normal.y() + 1, normal.z() + 1); //Normalise to 0 to 1 range, from -1 to -1
+	}
+
 	vec3 unit_direction = unit_vector(r.direction());
-	float t = 0.5f * (unit_direction.y() + 1.0f);
+	t = 0.5f * (unit_direction.y() + 1.0f);
 	return (1.0f - t)*vec3(1.0f, 1.0f, 1.0f) + t * vec3(0.5f, 0.7f, 1.0f);
 }
 
