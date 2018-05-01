@@ -138,8 +138,12 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera\camera.h" />
     <ClInclude Include="Headers\stb_image.h" />
     <ClInclude Include="Headers\stb_image_write.h" />
+    <ClInclude Include="Hitables\hitable.h" />
+    <ClInclude Include="Hitables\hitable_list.h" />
+    <ClInclude Include="Hitables\sphere.h" />
     <ClInclude Include="Maths\vec3.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />

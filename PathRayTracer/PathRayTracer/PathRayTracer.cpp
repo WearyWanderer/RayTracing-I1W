@@ -2,35 +2,17 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <random>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #define STBI_MSC_SECURE_CRT
 #include "Headers\stb_image_write.h"
 
+#include "Hitables\hitable_list.h"
+#include "Hitables\sphere.h"
+#include "Camera\camera.h"
+
 using namespace std;
-
-void WriteToBaseImageFilePPM(int width, int height, const char* filename)
-{
-	ofstream fileStream;
-	fileStream.open(filename);
-
-	fileStream << "P3\n" << width << " " << height << "\n255\n";
-
-	for (int j = height - 1; j >= 0; --j)
-	{
-		for (int i = 0; i < width; ++i)
-		{
-			vec3 col = vec3(float(i) / float(width), float(j) / float(height), 0.2f);
-
-			int ir = int(255.99f*col[0]);
-			int ig = int(255.99f*col[1]);
-			int ib = int(255.99f*col[2]);
-			fileStream << ir << " " << ig << " " << ib << "\n";
-		}
-	}
-
-	fileStream.close();
-}
 
 bool WriteBMPFile(const int w,const int h, int comp, const void* data)
 {	
@@ -40,48 +22,41 @@ bool WriteBMPFile(const int w,const int h, int comp, const void* data)
 	return true;
 }
 
-float hit_sphere(const vec3& position, float radius, const ray& r)
+vec3 color(const ray& r, hitable *world)
 {
-	vec3 oc = r.origin() - position;
-	float a = dot(r.direction(), r.direction()), b = 2.0f * dot(oc, r.direction()), c = dot(oc, oc) - radius*radius;
-
-	float discriminant = b*b - 4 * a*c;
-	if (discriminant < 0)
-		return -1.0f;
-	else
-		return (-b - sqrt(discriminant)) / (2.0f * a);
-}
-
-vec3 color(const ray& r)
-{
-	float t = hit_sphere(vec3(0.0f, 0.0f, -1.0f), 0.5f, r);
-	if (t > 0.0f)
+	hit_record rec;
+	if (world->hit(r, 0.0f, FLT_MAX, rec))
 	{
-		vec3 normal = unit_vector(r.point_at_param(t) - vec3(0.0f, 0.0f, -1.0f)); //calculate normal on sphere from this pixel
-		return 0.5f * vec3(normal.x() + 1, normal.y() + 1, normal.z() + 1); //Normalise to 0 to 1 range, from -1 to -1
+		return 0.5f * vec3(rec.normal.x() + 1, rec.normal.y() + 1, rec.normal.z() + 1); //Normalise to 0 to 1 range, from -1 to -1
 	}
-
-	vec3 unit_direction = unit_vector(r.direction());
-	t = 0.5f * (unit_direction.y() + 1.0f);
-	return (1.0f - t)*vec3(1.0f, 1.0f, 1.0f) + t * vec3(0.5f, 0.7f, 1.0f);
+	else
+	{
+		vec3 unit_direction = unit_vector(r.direction());
+		float t = 0.5f * (unit_direction.y() + 1.0f);
+		return (1.0f - t)*vec3(1.0f, 1.0f, 1.0f) + t * vec3(0.5f, 0.7f, 1.0f);
+	}
 }
-
-struct screenCoords
-{
-public:
-	vec3 lower_left_corner;
-	vec3 vertical_coords;
-	vec3 horizontal_coords;
-
-	screenCoords(vec3 l_f_c,vec3 v_c,vec3 h_c) : lower_left_corner(l_f_c), vertical_coords(v_c), horizontal_coords(h_c){};
-};
 
 int main()
 {
-	int w = 200, h = 100;
+	int w = 800, h = 400, samplesPerPixel = 100;
 
-	screenCoords screen = screenCoords(vec3(-2.0f, -1.0f, -1.0f), vec3(0.0f,2.0f,0.0f), vec3(4.0f,0.0f,0.0f));
-	vec3 camera_origin = vec3(0.0f, 0.0f, 0.0f);
+#pragma region Camera Setup
+	camera cam;
+#pragma endregion
+
+#pragma region World Setup
+	hitable *list[2]; //create array for our hitable_list
+	list[0] = new sphere(vec3(0.0f, 0.0f, -1.0f), 0.5f);
+	list[1] = new sphere(vec3(0.0f, -100.5f, -1.0f), 100.0f);
+
+	hitable *world = new hitable_list(list, 2); //create our list which fully represents our 'world' of hitable objects
+#pragma endregion
+
+#pragma region Random Setup
+	default_random_engine randEngine;
+	uniform_real_distribution<float> randomFloat(0.0f,1.0f);
+#pragma endregion
 
 	unsigned char* colDataRaw = new unsigned char[(w*h) * 3];
 	int pix = 0;
@@ -89,10 +64,14 @@ int main()
 	{
 		for (int i = 0; i < w; i++)
 		{
-			float u = (float)i / (float)w, v = (float)j / (float)h;
-			ray r(camera_origin, screen.lower_left_corner + u * screen.horizontal_coords + v * screen.vertical_coords);
-			
-			vec3 pixelCol = color(r);
+			vec3 pixelCol(0.0f, 0.0f, 0.0f);
+			for (int s = 0; s < samplesPerPixel; s++)
+			{
+				float u = (float)(i + randomFloat(randEngine)) / (float)w, v = (float)(j + randomFloat(randEngine)) / (float)h;
+				ray r = cam.get_ray(u, v);
+				pixelCol += color(r, world);
+			}
+			pixelCol /= samplesPerPixel;
 
 			int ir = int(255.99f*pixelCol[0]);
 			int ig = int(255.99f*pixelCol[1]);
@@ -105,7 +84,6 @@ int main()
 		}
 	}
 
-	//WriteToBaseImageFilePPM(xSize, ySize, "example.ppm");
 	WriteBMPFile(w, h, 3, &colDataRaw[0]);
 
 	cout << "Press Enter key to close" << endl;
