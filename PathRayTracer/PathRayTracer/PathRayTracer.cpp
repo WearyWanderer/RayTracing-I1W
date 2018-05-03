@@ -22,13 +22,13 @@ bool WriteBMPFile(const char* filename, const int w,const int h, int comp, const
 	return true;
 }
 
-vec3 color(const ray& r, hitable *world, default_random_engine *engine, uniform_real_distribution<float> *randomFloat)
+vec3 color(const ray& r, hitable *world)
 {
 	hit_record rec;
 	if (world->hit(r, 0.001f, FLT_MAX, rec))
 	{
-		vec3 target = rec.p + rec.normal + ray::random_in_unit_sphere(engine, *randomFloat); //Get a random ray bounce target
-		return 0.5f * color(ray(rec.p, target-rec.p), world, engine, randomFloat); //Normalise to 0 to 1 range, from -1 to -1
+		vec3 target = rec.p + rec.normal + ray::random_in_unit_sphere(); //Get a random ray bounce target
+		return 0.5f * color(ray(rec.p, target-rec.p), world); //Normalise to 0 to 1 range, from -1 to -1
 	}
 	else
 	{
@@ -70,11 +70,6 @@ int main()
 	hitable *world = new hitable_list(list, 3); //create our list which fully represents our 'world' of hitable objects
 #pragma endregion
 
-#pragma region Random Setup
-	default_random_engine randEngine;
-	uniform_real_distribution<float> randomFloat(0.0f,1.0f);
-#pragma endregion
-
 	unsigned char* colDataRaw = new unsigned char[(w*h) * 3];
 	int pix = 0;
 	for (int j = h - 1; j >= 0; j--)
@@ -84,9 +79,9 @@ int main()
 			vec3 pixelCol(0.0f, 0.0f, 0.0f);
 			for (int s = 0; s < samplesPerPixel; s++)
 			{
-				float u = (float)(i + randomFloat(randEngine)) / (float)w, v = (float)(j + randomFloat(randEngine)) / (float)h;
+				float u = (float)(i + RandomModule::instance().GetRandomUnitFloat()) / (float)w, v = (float)(j + RandomModule::instance().GetRandomUnitFloat()) / (float)h;
 				ray r = cam.get_ray(u, v);
-				pixelCol += color(r, world, &randEngine, &randomFloat);
+				pixelCol += color(r, world);
 			}
 			pixelCol /= samplesPerPixel;
 			pixelCol = vec3(sqrt(pixelCol[0]), sqrt(pixelCol[1]), sqrt(pixelCol[2]));

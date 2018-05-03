@@ -16,4 +16,7 @@
 
 #include "Maths\vec3.h"
 #include "Maths\ray.h"
+#include "Maths\distribution.h"
+
+using RandomModule = single_instance<Distribution>;
 
