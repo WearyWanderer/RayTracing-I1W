@@ -70,8 +70,12 @@ int main()
 	hitable *world = new hitable_list(list, 3); //create our list which fully represents our 'world' of hitable objects
 #pragma endregion
 
-	unsigned char* colDataRaw = new unsigned char[(w*h) * 3];
-	int pix = 0;
+	int byteCount = (w*h) * 3;
+	int progressCount = 0;
+	int lastProgressCount = 0;
+	unsigned char* colDataRaw = new unsigned char[byteCount];
+	int index = 0;
+
 	for (int j = h - 1; j >= 0; j--)
 	{
 		for (int i = 0; i < w; i++)
@@ -89,10 +93,16 @@ int main()
 			int ig = int(255.99f*pixelCol[1]);
 			int ib = int(255.99f*pixelCol[2]);
 
-			colDataRaw[pix] = ir;
-			colDataRaw[pix + 1] = ig;
-			colDataRaw[pix + 2] = ib;
-			pix += 3;
+			colDataRaw[index] = ir;
+			colDataRaw[index + 1] = ig;
+			colDataRaw[index + 2] = ib;
+			index += 3;
+			progressCount = std::floor((index * 100.0f) / byteCount);
+			if (progressCount > lastProgressCount)
+			{
+				lastProgressCount = progressCount;
+				cout << "Path-Tracing Progress: " << progressCount << endl;
+			}
 		}
 	}
 
