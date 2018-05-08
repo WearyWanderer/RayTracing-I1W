@@ -9,10 +9,11 @@ class sphere : public hitable
 {
 public:
 	sphere() {}
-	sphere(vec3 cen, float r) : center(cen), radius(r) {};
+	sphere(vec3 cen, float r, material* m) : center(cen), radius(r), mat(m) {};
 	virtual bool hit(const ray& r, float tmin, float tmax, hit_record& rec) const;
 	vec3 center;
 	float radius;
+	material* mat;
 };
 
 
@@ -31,6 +32,7 @@ bool sphere::hit(const ray& r, float tmin, float tmax, hit_record& rec) const
 			rec.t = temp; //Return hit record of t, point at t and normal at t
 			rec.p = r.point_at_param(temp);
 			rec.normal = (rec.p - center) / radius; //This is the calc for normal form a sphere, will not be same for all geometry
+			rec.mat_ptr = mat;
 			return true;
 		}
 
@@ -39,7 +41,8 @@ bool sphere::hit(const ray& r, float tmin, float tmax, hit_record& rec) const
 		{
 			rec.t = temp; //Return hit record of t, point at t and normal at t
 			rec.p = r.point_at_param(temp);
-			rec.normal = (rec.p - center) / radius; //This is the calc for normal form a sphere, will not be same for all geometry
+			rec.normal = (rec.p - center) / radius; //This is the calc for normal form a sphere, will not be same for all geometr
+			rec.mat_ptr = mat;
 			return true;
 		}
 	}

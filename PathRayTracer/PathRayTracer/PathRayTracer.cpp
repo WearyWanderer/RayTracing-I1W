@@ -11,6 +11,7 @@
 #include "Hitables\hitable_list.h"
 #include "Hitables\sphere.h"
 #include "Camera\camera.h"
+#include "Graphics\material.h"
 
 using namespace std;
 
@@ -22,13 +23,17 @@ bool WriteBMPFile(const char* filename, const int w,const int h, int comp, const
 	return true;
 }
 
-vec3 color(const ray& r, hitable *world)
+vec3 color(const ray& r, hitable *world, int depth)
 {
 	hit_record rec;
 	if (world->hit(r, 0.001f, FLT_MAX, rec))
 	{
-		vec3 target = rec.p + rec.normal + ray::random_in_unit_sphere(); //Get a random ray bounce target
-		return 0.5f * color(ray(rec.p, target-rec.p), world); //Normalise to 0 to 1 range, from -1 to -1
+		ray scattered;
+		vec3 attenuation;
+		if (depth < 50 && rec.mat_ptr->scatter(r, rec, attenuation, scattered))
+			return attenuation*color(scattered, world, depth + 1);
+		else
+			return vec3(0.0f, 0.0f, 0.0f);
 	}
 	else
 	{
@@ -55,7 +60,7 @@ vec3 colorNormals(const ray& r, hitable *world)
 
 int main()
 {
-	int w = 1600, h = 800, samplesPerPixel = 100;
+	int w = 1600, h = 800, samplesPerPixel = 250;
 
 #pragma region Camera Setup
 	camera cam;
@@ -63,9 +68,9 @@ int main()
 
 #pragma region World Setup
 	hitable *list[3]; //create array for our hitable_list
-	list[0] = new sphere(vec3(0.0f, 0.0f, -1.0f), 0.5f);
-	list[1] = new sphere(vec3(0.0f, -100.5f, -1.0f), 100.0f);
-	list[2] = new sphere(vec3(1.0f, 0.0f, -1.5f), 0.5f);
+	list[0] = new sphere(vec3(0.0f, 0.0f, -1.0f), 0.5f, new lambertian(vec3(0.8f, 0.3f, 0.3f)));
+	list[1] = new sphere(vec3(0.0f, -100.5f, -1.0f), 100.0f, new lambertian(vec3(0.2f, 0.64f, 0.75f)));
+	list[2] = new sphere(vec3(1.0f, 0.0f, -1.5f), 0.5f, new lambertian(vec3(0.67f, 0.5f, 0.67f)));
 
 	hitable *world = new hitable_list(list, 3); //create our list which fully represents our 'world' of hitable objects
 #pragma endregion
@@ -85,7 +90,7 @@ int main()
 			{
 				float u = (float)(i + RandomModule::instance().GetRandomUnitFloat()) / (float)w, v = (float)(j + RandomModule::instance().GetRandomUnitFloat()) / (float)h;
 				ray r = cam.get_ray(u, v);
-				pixelCol += color(r, world);
+				pixelCol += color(r, world, 0);
 			}
 			pixelCol /= samplesPerPixel;
 			pixelCol = vec3(sqrt(pixelCol[0]), sqrt(pixelCol[1]), sqrt(pixelCol[2]));
